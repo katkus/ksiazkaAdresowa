@@ -174,88 +174,10 @@ void saveAllContacts (vector <Contact> &addressBook)
 	}
 }
 
-void addNewContact (vector <Contact> &addressBook,int lastContactId?)
-{
-	string auxiliaryFirstName, auxiliarySurname;
-	Contact contacts;
-//zapis z pliku na zasadzie dodania wszystkich kontaktów dla użytkownika o danym id, a co z resztą?
-	cout << "Podaj imie: ";
-	auxiliaryFirstName = readData();
-	cout << "Podaj nazwisko: ";
-	auxiliarySurname = readData();
-
-	int i = 0;
-	while (i < addressBook.size())
-	{
-		if ((addressBook[i].firstName == auxiliaryFirstName) && (addressBook[i].surname == auxiliarySurname))
-		{
-			cout << "Kontakt o podanym imieniu i nazwisku juz istnieje. Prosze o podanie innego imienia i nazwiska do kontaktu.";
-			cout << "Podaj imie: ";
-			auxiliaryFirstName = readData();
-			cout << "Podaj nazwisko: ";
-			auxiliarySurname = readData(); i=0;
-		}
-		else
-		{
-			i++;
-		}
-	}
-
-	int counter;
-	if (addressBook.size() == 0)
-	{
-		counter = 1;
-	}
-	else
-	{
-		counter = addressBook[addressBook.size()-1].id+1;
-	}
-//zapis na końcu pliku. Id się nie zgadza to z vectora względem tego w pliku.
-	contacts.contactId = counter;//Jak znalezc id ostatniego uzytkownika z pliku i znalezc jego id??
-	contacts.userId = addressBook.userId;
-	contacts.firstName = auxiliaryFirstName;
-	contacts.surname = auxiliarySurname;
-	cout << "Podaj numer telefonu: " ;
-	contacts.phoneNumber = readData();
-	cout << "Podaj adres e-mail: " ;
-	contacts.email = readData();
-	cout << "Podaj adres zamieszkania: " ;
-	contacts.address = readData();
-	addressBook.push_back(contacts);
-
-	fstream plik;
-	plik.open("Adresaci.txt", ios::out | ios::app);
-
-	if (plik.good() == true)
-	{
-		plik << addressBook[addressBook.size()].contactId << '|';
-                plik << addressBook[addressBook.size()].userId << '|';
-		plik << addressBook[addressBook.size()].firstName << '|';
-		plik << addressBook[addressBook.size()].surname << '|';
-		plik << addressBook[addressBook.size()].phoneNumber << '|';
-		plik << addressBook[addressBook.size()].email << '|';
-		plik << addressBook[addressBook.size()].address << '|' << endl;
-		plik.close();
-	}
-	else
-	{
-		cout << "Nie udalo się otworzyc pliku i zapisac do niego danych. " ;
-		return;
-	}
-	cout << "Kontakt zostal dodany. " << endl;
-	sleep(2);
-	return;
-}
-
-int transferLastContactId (int lastContactId)
-{
-	return lastContactId;//do przekazania w inny sposób;
-}
-
-void loadContactsFromFile (vector <Contact> &addressBook, int loggedInUserId)
+void loadContactsFromFile (vector <Contact> &addressBook, int &lastContactId, int &loggedInUserId)
 {
 	string data;
-	int position = 1, lastContactId = 0;
+	int position = 1;
 	Contact contacts;
 
 	fstream plik;
@@ -294,9 +216,9 @@ void loadContactsFromFile (vector <Contact> &addressBook, int loggedInUserId)
 				if(contacts.userId == loggedInUserId)
 				{
 					addressBook.push_back(contacts);
-					lastContactId = contacts.contactId;
 				}
 				position = 1;
+				lastContactId = contacts.contactId;
 			}
 			else
 			{
@@ -309,9 +231,83 @@ void loadContactsFromFile (vector <Contact> &addressBook, int loggedInUserId)
 	{
 		cout << "Nie uzyskano dostepu do pliku." << endl;
 	}
-	transferLastContactId (lastContactId);
+
 	return;
 }
+
+void addNewContact (vector <Contact> &addressBook, int &lastContactId, int &loggedInUserId)
+{
+	string auxiliaryFirstName, auxiliarySurname;
+	Contact contacts;
+	int counter; int i = 0;
+
+	cout << "Podaj imie: ";
+	auxiliaryFirstName = readData();
+	cout << "Podaj nazwisko: ";
+ 	auxiliarySurname = readData();
+
+	while (i < addressBook.size())
+        {
+                 if ((addressBook[i].firstName == auxiliaryFirstName) && (addressBook[i].surname == auxiliarySurname))
+                 {
+                         cout << "Kontakt o podanym imieniu i nazwisku juz istnieje. Prosze o podanie innego imienia i nazwiska do kontaktu.";
+                         cout << "Podaj imie: ";
+                         auxiliaryFirstName = readData();
+                         cout << "Podaj nazwisko: ";
+                         auxiliarySurname = readData(); i=0;
+                 }
+                 else
+                 {
+                         i++;
+                 }
+        }
+fstream plik_do_odczytu ("Adresaci.txt");
+        if (!plik_do_odczytu.good())
+        {
+                 counter = 1;
+        }
+        else
+        {
+                 counter = lastContactId +1;
+        }
+//zapis na końcu pliku. Id się nie zgadza to z vectora względem tego w pliku.
+         contacts.contactId = counter;//Jak znalezc id ostatniego uzytkownika z pliku i znalezc jego id??
+         contacts.userId = loggedInUserId;
+         contacts.firstName = auxiliaryFirstName;
+         contacts.surname = auxiliarySurname;
+         cout << "Podaj numer telefonu: " ;
+         contacts.phoneNumber = readData();
+         cout << "Podaj adres e-mail: " ;
+         contacts.email = readData();
+         cout << "Podaj adres zamieszkania: " ;
+         contacts.address = readData();
+         addressBook.push_back(contacts);
+
+         fstream plik;
+         plik.open("Adresaci.txt", ios::out | ios::app);
+
+         if (plik.good() == true)
+         {
+                 plik << contacts.contactId << '|';
+                 plik << contacts.userId << '|';
+                 plik << contacts.firstName << '|';
+                 plik << contacts.surname << '|';
+                 plik << contacts.phoneNumber << '|';
+                 plik << contacts.email << '|';
+                 plik << contacts.address << '|' << endl;
+                 plik.close();
+                 lastContactId++;
+         }
+         else
+         {
+                 cout << "Nie udalo się otworzyc pliku i zapisac do niego danych. " ;
+                 return;
+         }
+         cout << "Kontakt zostal dodany. " << endl;
+         sleep(2);
+         return;
+ }
+
 
 void displayAllContacts (vector <Contact> &addressBook)
 {
@@ -379,30 +375,22 @@ void searchBySurname (vector <Contact> &addressBook)
 	getchar();
 }
 
-void deleteContact (vector <Contact> &addressBook)
+void deleteContact (vector <Contact> &addressBook, int &lastContactId)
 {
-	char choice;
+	int choice; char choice2;
 //zapis z pliku na zasadzie dodania wszystkich kontaktów dla użytkownika o danym id, a co z resztą?
 	while(true)
         {
-                cout << "Podaj id uzytkownika, ktorego dane chcesz edytowac. W celu wyswietlenia wszystkich adresatow nacisnij d. W celu wyjscia do wczesnijeszego kokpitu nacisnij e." << endl;
-                choice = readSign();
+                cout << "Podaj id uzytkownika, ktorego dane chcesz edytowac."<<endl;
+                choice = atoi (readData().c_str());
 
-                if (choice == 'd')
-                {
-                        displayAllContacts (addressBook);
-                }
-		else if (choice == 'e')
-		{
-			return;
-		}
-                else if ((int (choice-48) > 0) && (int (choice-48) <= addressBook.size()))
+                if ((choice > 0) && (choice <= lastContactId))
              	{
-                        int idToEdit = choice-48; int i = 0;
+			int i = 0;
 			vector<Contact> ::iterator itr = addressBook.begin();
 			for (itr; itr != addressBook.end(); ++itr)
 			{
-				if (idToEdit == itr-> id)
+				if (choice == itr-> contactId)
 				{
 					break;
 				}
@@ -434,32 +422,23 @@ void deleteContact (vector <Contact> &addressBook)
 return;
 }
 
-void editContact (vector <Contact> &addressBook)
+void editContact (vector <Contact> &addressBook, int &lastContactId)
 {
-	char choice, choice2; int idToEdit, i; 
+	int choice; char choice2; int idToEdit, i; 
 //zapis z pliku na zasadzie dodania wszystkich kontaktów dla użytkownika o danym id, a co z resztą?
 
 	system("clear");//Windows "cls";
 	while(true)
 	{
-		cout << "Podaj id uzytkownika, ktorego dane chcesz edytowac. W celu wyswietlenia wszystkich adresatow nacisnij d. W celu wyjscia do wczesniejszego kokpitu nacisnij e." << endl;
-		choice = readSign();
+		cout << "Podaj id uzytkownika, ktorego dane chcesz edytowac."<<endl;
+		choice = atoi (readData().c_str());
 
-		if (choice == 'd')
+		if ((choice > 0) && (choice <= lastContactId))
 		{
-			displayAllContacts (addressBook);
-		}
-		else if (choice == 'e')
-		{
-			return;
-		}
-		else if ((int (choice-48) > 0) && (int (choice-48) <= addressBook.size()))
-		{
-			idToEdit = choice-48;
 
 			for ( i = 0; i <= addressBook.size(); i++ )
 			{
-				if( idToEdit == addressBook[i].id )
+				if( choice == addressBook[i].contactId )
 				{
 					break;
 				}
@@ -526,16 +505,16 @@ void editContact (vector <Contact> &addressBook)
 return;
 }
 
-void changePassword (vector <User> &userList, vector <Contact> &addressBook)
+void changePassword (vector <User> &userList, vector <Contact> &addressBook, int &loggedInUserId)
 {
         string password = "";
 
         cout<< "Podaj nowe haslo: ";
         password = readData();
 
-        for (int i = 0; i < usersList.size(); i++)
+        for (int i = 0; i < userList.size(); i++)
         {
-                if (userList[i].id == addressBook.userId)
+                if (userList[i].id == loggedInUserId)
                 {
                         userList[i].password = password;
 
@@ -566,12 +545,12 @@ void changePassword (vector <User> &userList, vector <Contact> &addressBook)
         }
 }
 
-void runDashbord2 (vector <User> userList, int loggedInUserId)
+void runDashbord2 (vector <User> &userList, int &loggedInUserId)
 {
 	char choice;
-        vector <Contacts> addressBook;
-
-        loadContactsFromFile (addressBook, loggedInUserId);
+        vector <Contact> addressBook;
+	int lastContactId =0;
+        loadContactsFromFile (addressBook, lastContactId, loggedInUserId);
 
         while(true)
         {
@@ -592,7 +571,7 @@ void runDashbord2 (vector <User> userList, int loggedInUserId)
                 switch ( choice )
                 {
                 case '1':
-                        addNewContact (addressBook);
+                        addNewContact (addressBook, lastContactId, loggedInUserId);
                         break;
                 case '2':
                         searchByFirstName (addressBook);
@@ -604,16 +583,16 @@ void runDashbord2 (vector <User> userList, int loggedInUserId)
                         displayAllContacts (addressBook);
                         break;
                 case '5':
-                        deleteContact (addressBook);
+                        deleteContact (addressBook, lastContactId);
                         break;
                 case '6':
-                        editContact (addressBook);
+                        editContact (addressBook, lastContactId);
                         break;
                 case '7':
-                        changePassword (userList, addressBook);
+                        changePassword (userList, addressBook, loggedInUserId);
                         break;
                 case '8':
-                        exit (0);
+                       return;
                         break;
                 default:
                         cout << "Niepoprawny wybór." << endl;
@@ -626,20 +605,20 @@ void runDashbord2 (vector <User> userList, int loggedInUserId)
 void logIn (vector <User> &userList)
 {
         string username = "", password = "";
-        int = 0, loggedInUserId = 0;
+        int i = 0; int loggedInUserId = 0;
 
         cout << "Podaj login: ";
         username = readData();
 
-        while (i < usersList.size())
+        while (i < userList.size())
         {
-                if (usersList[i].username == username)
+                if (userList[i].username == username)
                 {
                         for(int attempt = 0; attempt < 3; attempt++)
                         {
                                 cout << "Podaj hasło. Pozostało prób " << 3-attempt<< ": ";
                                 password = readData();
-                                if (usersList[i].password == password)
+                                if (userList[i].password == password)
                                 {
                                         cout << "Zalogowałeś się." << endl;
 					loggedInUserId = userList[i].id;
@@ -662,7 +641,7 @@ void logIn (vector <User> &userList)
 int main()
 {
 	char choice;
-	vector <User> userList;
+	vector <User> userList; vector <Contact> addressBook;
 
 	loadUsersFromFile (userList);
 
