@@ -5,8 +5,14 @@
 #include <fstream>
 #include <sstream>
 #include <unistd.h>
+#include <cstdio>
+#include <stdio.h>
 
 using namespace std;
+
+string userFile = "Uzytkownicy.txt";
+string temporaryContactFile = "AdresaciTymczasowy.txt";
+string contactFile = "Adresaci.txt";
 
 struct User
 {
@@ -53,7 +59,7 @@ void loadUsersFromFile (vector <User> &userList)
         User users;
 
         fstream plik;
-        plik.open("Uzytkownicy.txt", ios::in);
+        plik.open(userFile.c_str(), ios::in);
 
         if (plik.good() == true)
         {
@@ -128,7 +134,7 @@ void registration (vector <User> &userList)
 	userList.push_back(users);
 
         fstream plik;
-        plik.open("Uzytkownicy.txt", ios::out | ios::app);
+        plik.open(userFile.c_str(), ios::out | ios::app);
 
         if (plik.good() == true)
         {
@@ -147,31 +153,100 @@ void registration (vector <User> &userList)
         return;
 }
 
-void saveAllContacts (vector <Contact> &addressBook)
+void saveAllContacts (vector <Contact> &addressBook, int&loggedInUserId)
 {
-	fstream plik;
-	plik.open("Adresaci.txt", ios::trunc | ios::out);
-//zapis z pliku na zasadzie dodania wszystkich kontaktów dla użytkownika o danym id, a co z resztą? Do zmiany...
-	if (plik.good() == true)
+        string data;
+        int position = 1;
+        Contact contacts;
+
+        fstream plik;
+        plik.open (contactFile.c_str(), ios::in);
+
+        if (plik.good() == true)
         {
-		for( vector<Contact>::iterator itr = addressBook.begin(); itr != addressBook.end(); ++itr)
-		{
-			plik << itr-> contactId << '|';
-			plik << itr-> userId << '|';
-			plik << itr-> firstName << '|';
-                        plik << itr-> surname << '|';
-			plik << itr-> phoneNumber << '|';
-			plik << itr-> email << '|';
-			plik << itr-> address << '|' << endl;
-		}
-		plik.close();
-		return;
-	}
-	else
-	{
-		cout << "Nie udalo się otworzyc pliku i edytowac danych. " << endl;
-		return;
-	}
+                while (getline(plik, data, '|'))
+                {
+                        switch (position)
+                        {
+                        case 1:
+                                contacts.contactId = atoi(data.c_str());
+                                break;
+                        case 2:
+                                contacts.userId = atoi(data.c_str());
+                                break;
+                        case 3:
+                                contacts.firstName = data;
+                                break;
+                        case 4:
+                                contacts.surname = data;
+                                break;
+                        case 5:
+                                contacts.phoneNumber = data;
+                                break;
+                        case 6:
+                                contacts.email = data;
+                                break;
+                        case 7:
+                                contacts.address = data;
+                                break;
+                        }
+                        if (position >= 7)
+                        {
+                                fstream zapis_pliku;
+                                zapis_pliku.open (temporaryContactFile.c_str(), ios::out | ios::app);
+
+                                if (zapis_pliku.good() == true)
+                                {
+                                        if(contacts.userId != loggedInUserId)
+                                        {
+                                                zapis_pliku << contacts.contactId << '|';
+                                                zapis_pliku << contacts.userId << '|';
+                                                zapis_pliku << contacts.firstName << '|';
+                                                zapis_pliku << contacts.surname << '|';
+                                                zapis_pliku << contacts.phoneNumber << '|';
+                                                zapis_pliku << contacts.email << '|';
+                                                zapis_pliku << contacts.address << '|' << endl;
+                                        }
+                                        else if(contacts.userId == loggedInUserId)
+                                        {
+                                                for (int i = 0; i < addressBook.size(); i++ )
+                                                {
+                                                        if(contacts.contactId == addressBook[i].contactId)
+                                                        {
+                                                                zapis_pliku << addressBook[i].contactId << '|';
+                                                                zapis_pliku << addressBook[i].userId << '|';
+                                                                zapis_pliku << addressBook[i].firstName << '|';
+                                                                zapis_pliku << addressBook[i].surname << '|';
+                                                                zapis_pliku << addressBook[i].phoneNumber << '|';
+                                                                zapis_pliku << addressBook[i].email << '|';
+                                                                zapis_pliku << addressBook[i].address << '|' << endl;
+
+                                                        }
+                                                }
+                                        }
+                                        position = 1;
+                                        zapis_pliku.close();
+                                }
+                                else
+                                {
+                                        cout << "Nie udało się utworzyć pliku i zapisać do niego danych. " ;
+                                        return;
+                                }
+                        }
+                        else
+                        {
+                                position++;
+                        }
+                }
+                plik.close();        }
+        else
+        {
+                cout << "Nie uzyskano dostepu do pliku." << endl;
+                return;
+        }
+                remove (contactFile.c_str());
+                rename (temporaryContactFile.c_str(), contactFile.c_str());
+        	return;
 }
 
 void loadContactsFromFile (vector <Contact> &addressBook, int &lastContactId, int &loggedInUserId)
@@ -181,7 +256,7 @@ void loadContactsFromFile (vector <Contact> &addressBook, int &lastContactId, in
 	Contact contacts;
 
 	fstream plik;
-	plik.open("Adresaci.txt", ios::in);
+	plik.open(contactFile.c_str(), ios::in);
 
 	if (plik.good() == true)
 	{
@@ -261,7 +336,7 @@ void addNewContact (vector <Contact> &addressBook, int &lastContactId, int &logg
                          i++;
                  }
         }
-fstream plik_do_odczytu ("Adresaci.txt");
+	fstream plik_do_odczytu (contactFile.c_str());
         if (!plik_do_odczytu.good())
         {
                  counter = 1;
@@ -270,8 +345,8 @@ fstream plik_do_odczytu ("Adresaci.txt");
         {
                  counter = lastContactId +1;
         }
-//zapis na końcu pliku. Id się nie zgadza to z vectora względem tego w pliku.
-         contacts.contactId = counter;//Jak znalezc id ostatniego uzytkownika z pliku i znalezc jego id??
+
+         contacts.contactId = counter;
          contacts.userId = loggedInUserId;
          contacts.firstName = auxiliaryFirstName;
          contacts.surname = auxiliarySurname;
@@ -284,7 +359,7 @@ fstream plik_do_odczytu ("Adresaci.txt");
          addressBook.push_back(contacts);
 
          fstream plik;
-         plik.open("Adresaci.txt", ios::out | ios::app);
+         plik.open(contactFile.c_str(), ios::out | ios::app);
 
          if (plik.good() == true)
          {
@@ -297,15 +372,16 @@ fstream plik_do_odczytu ("Adresaci.txt");
                  plik << contacts.address << '|' << endl;
                  plik.close();
                  lastContactId++;
+		cout << "Kontakt zostal dodany. " << endl;
+         	sleep(2);
+         	return;
          }
          else
          {
-                 cout << "Nie udalo się otworzyc pliku i zapisac do niego danych. " ;
-                 return;
+		cout << "Nie udalo się otworzyc pliku i zapisac do niego danych. " ;
+                sleep(2);
+		return;
          }
-         cout << "Kontakt zostal dodany. " << endl;
-         sleep(2);
-         return;
  }
 
 
@@ -322,7 +398,7 @@ void displayAllContacts (vector <Contact> &addressBook)
 		cout << "adres: " << addressBook[i].address << endl;
 		cout << endl;
 	}
-		cout << "Nacisnij enter, aby przejsc do kolejnego wyswietlenia." << endl;
+		cout << "Nacisnij enter, aby przejsc do kolejnego wyswietlenia. Brak wyswietlaniadanych oznacza brak kontaktow." << endl;
 		getchar(); //Windows system("pause");
 }
 
@@ -347,7 +423,7 @@ void searchByFirstName (vector <Contact> &addressBook)
 			cout << endl;
 		}
 	}
-	cout << "Nacisnij enter, aby przejsc do kolejnego wyswietlenia." << endl;
+	cout << "Nacisnij enter, aby przejsc do kolejnego wyswietlenia. Brak wyswietlenia danych oznacza brak kontakow." << endl;
 	getchar(); //Windows system("pause"), albo sleep(10);
 }
 
@@ -371,14 +447,14 @@ void searchBySurname (vector <Contact> &addressBook)
 			cout << endl;
                 }
         }
-	cout << "Nacisnij enter, aby przejsc do kolejnego wyswietlenia."<<endl;
+	cout << "Nacisnij enter, aby przejsc do kolejnego wyswietlenia. Brak wyswietlenia danych oznacza brak kontaktow."<<endl;
 	getchar();
 }
 
-void deleteContact (vector <Contact> &addressBook, int &lastContactId)
+void deleteContact (vector <Contact> &addressBook, int &lastContactId, int&loggedInUserId)
 {
 	int choice; char choice2;
-//zapis z pliku na zasadzie dodania wszystkich kontaktów dla użytkownika o danym id, a co z resztą?
+
 	while(true)
         {
                 cout << "Podaj id uzytkownika, ktorego dane chcesz edytowac."<<endl;
@@ -392,113 +468,121 @@ void deleteContact (vector <Contact> &addressBook, int &lastContactId)
 			{
 				if (choice == itr-> contactId)
 				{
-					break;
-				}
+
+					cout << "Czy na pewno chcesz usunac uzytkownika? Jesli tak wciśnij t. "<<endl;
+					char choice2 = readSign();
+					if ( choice2 == 't')
+					{
+					addressBook.erase(itr);
+					saveAllContacts(addressBook, loggedInUserId);
+					cout << "Kontakt zostal usuniety. " << endl;
+					sleep (2);
+					return;
+					}
+					else
+					{
+						cout<< "Zdecydowales sie nie usuwac danych."<<endl;
+						sleep(2);
+						return;
+					}
+                		}
 			}
-			cout << "Czy na pewno chcesz usunac uzytkownika? Jesli tak wciśnij t. "<<endl;
-			char choice2 = readSign();
-			if ( choice2 == 't')
-			{
-				addressBook.erase(itr);
-//zapis z pliku na zasadzie dodania wszystkich kontaktów dla użytkownika o danym id, a co z resztą?
-				saveAllContacts(addressBook);
-				cout << "Kontakt zostal usuniety. " << endl;
-				sleep (1);
-				return;
-			}
-			else
-			{
-				cout<< "Zdecydowales sie nie usuwac danych."<<endl;
-				sleep(2);
-				return;
-			}
-                }
+                	cout<< "Blad wprowadzanej danej. Zostaniesz cofniety do wczesnijeszego kokpitu."<<endl;
+                        sleep(2);
+                        return;
+
+		}
                 else
                 {
-			cout<< "Blad wprowadzanej danej. Wybierz numer id uzytkownika do usuniecia lub nacisnij w jesli chcesz wyswietlic wszystkie kontakty."<<endl;
-
+			cout<< "Blad wprowadzanej danej. Zostaniesz cofniety do wczesnijeszego kokpitu."<<endl;
+			sleep(2);
+			return;
                 }
         }
 return;
 }
 
-void editContact (vector <Contact> &addressBook, int &lastContactId)
+void editContact (vector <Contact> &addressBook, int &lastContactId, int&loggedInUserId)
 {
-	int choice; char choice2; int idToEdit, i; 
-//zapis z pliku na zasadzie dodania wszystkich kontaktów dla użytkownika o danym id, a co z resztą?
+	int choice; char choice2; int idToEdit, i;
+
+        if( addressBook.size() == 0)
+        {
+                cout << "Brak danych do edycji. Zostaniesz cofniety do wczesniejszego kokpitu."<<endl;
+                sleep(2);
+                return;
+        }
 
 	system("clear");//Windows "cls";
 	while(true)
 	{
 		cout << "Podaj id uzytkownika, ktorego dane chcesz edytowac."<<endl;
 		choice = atoi (readData().c_str());
-
 		if ((choice > 0) && (choice <= lastContactId))
 		{
-
 			for ( i = 0; i <= addressBook.size(); i++ )
 			{
 				if( choice == addressBook[i].contactId )
 				{
-					break;
+
+					system("clear");//Windows "cls";
+
+                			cout << "1 - imie" << endl;
+                			cout << "2 - nazwisko" << endl;
+                			cout << "3 - numer telefonu" << endl;
+                			cout << "4 - email" << endl;
+                			cout << "5 - adres" << endl;
+                			cout << "6 - powrot do menu glownego" << endl;
+
+					cout << "Podaj numer zmiennej, ktora chcesz edytowac. "<<endl;
+					choice2 = readSign();
+
+					if( (int(choice2-48) > 0) && (int(choice2-48) < 7) )
+					{
+						switch (choice2)
+						{
+						case '1':
+							cout << "Wprowadz nowe imie: " << endl;
+							addressBook[i].firstName = readData();
+                					break;
+                				case '2':
+							cout << "Wprowadz nowe nazwisko: " << endl;
+                                			addressBook[i].surname = readData();
+                					break;
+                				case '3':
+                        				cout << "Wprowadz nowy numer telefonu: " << endl;
+                                			addressBook[i].phoneNumber = readData();
+							break;
+                				case '4':
+                        				cout << "Wprowadz nowy email: " << endl;
+                                			addressBook[i].email = readData();
+                					break;
+                				case '5':
+                        				cout << "Wprowadz nowy adres: " << endl;
+                                			addressBook[i].address = readData();
+							break;
+                				case '6':
+							cout << "Powrot do wczesniejszego menu. " << endl;
+							return;
+							break;
+						}
+						saveAllContacts(addressBook, loggedInUserId);
+ 						cout << "Kontakt zostal edytowany. " << endl;
+ 						sleep(2);
+ 						return;
+
+                			}
+					else
+					{
+						cout << "Blad wprowadzanej danej do edycji." << endl;
+					}
 				}
-			}
-
-			system("clear");//Windows "cls";
-
-                	cout << "1 - imie" << endl;
-                	cout << "2 - nazwisko" << endl;
-                	cout << "3 - numer telefonu" << endl;
-                	cout << "4 - email" << endl;
-                	cout << "5 - adres" << endl;
-                	cout << "6 - powrot do menu glownego" << endl;
-
-			cout << "Podaj numer zmiennej, ktora chcesz edytowac. "<<endl;
-			choice2 = readSign();
-
-			if( (int(choice2-48) > 0) && (int(choice2-48) < 7) )
-			{
-				switch (choice2)
-				{
-				case '1':
-					cout << "Wprowadz nowe imie: " << endl;
-					addressBook[i].firstName = readData();
-                			break;
-                		case '2':
-					cout << "Wprowadz nowe nazwisko: " << endl;
-                                	addressBook[i].surname = readData();
-                			break;
-                		case '3':
-                        		cout << "Wprowadz nowy numer telefonu: " << endl;
-                                	addressBook[i].phoneNumber = readData();
-					break;
-                		case '4':
-                        		cout << "Wprowadz nowy email: " << endl;
-                                	addressBook[i].email = readData();
-                			break;
-                		case '5':
-                        		cout << "Wprowadz nowy adres: " << endl;
-                                	addressBook[i].address = readData();
-					break;
-                		case '6':
-					cout << "Powrot do wczesniejszego menu. " << endl;
-					exit(0);
-					break;
-				}
-//zapis z pliku na zasadzie dodania wszystkich kontaktów dla użytkownika o danym id, a co z resztą?
-				saveAllContacts(addressBook);
- 				cout << "Kontakt zostal edytowany. " << endl;
- 				sleep(2);
- 				return;
-
-                	}
-			else
-			{
-				cout << "Blad wprowadzanej danej do edycji." << endl;
 			}
 		}
 		else
-		{			cout<< "Blad wprowadzanej danej. Wybierz numer id uzytkownika do edycji lub nacisnij w jesli chcesz wyswietlic wszystkich uzytkownikow."<<endl;
+		{			cout<< "Wprowadzono nieprawidlowe dane. Zostaniesz cofniety do wczesniejszego kokpitu."<<endl;
+					sleep(3);
+					return;
 
 		}
 	}
@@ -519,7 +603,7 @@ void changePassword (vector <User> &userList, vector <Contact> &addressBook, int
                         userList[i].password = password;
 
 			fstream plik;
-        		plik.open("Uzytkownicy.txt", ios::trunc | ios::out);
+        		plik.open(contactFile.c_str(), ios::trunc | ios::out);
 
         		if (plik.good() == true)
         		{
@@ -549,12 +633,11 @@ void runDashbord2 (vector <User> &userList, int &loggedInUserId)
 {
 	char choice;
         vector <Contact> addressBook;
-	int lastContactId =0;
+	int lastContactId = 0;
         loadContactsFromFile (addressBook, lastContactId, loggedInUserId);
 
         while(true)
         {
-
                 system("clear");//Windows "cls";
                 cout << " KSIAZKA ADRESOWA " << endl;
                 cout << "1. Dodaj adresata" << endl;
@@ -563,7 +646,7 @@ void runDashbord2 (vector <User> &userList, int &loggedInUserId)
                 cout << "4. Wyswietl wszystkich adresatow" << endl;
                 cout << "5. Usun adresata" << endl;
                 cout << "6. Edytuj adresata" << endl;
-                cout << "7. Zmiana hasła" <<endl;
+                cout << "7. Zmiana hasla" <<endl;
                 cout << "8. Wylogowanie "<<endl;
                 cout << "Dokonaj wyboru wprowadzajac odpowiedni numer:";
 
@@ -583,10 +666,10 @@ void runDashbord2 (vector <User> &userList, int &loggedInUserId)
                         displayAllContacts (addressBook);
                         break;
                 case '5':
-                        deleteContact (addressBook, lastContactId);
+                        deleteContact (addressBook, lastContactId, loggedInUserId);
                         break;
                 case '6':
-                        editContact (addressBook, lastContactId);
+                        editContact (addressBook, lastContactId, loggedInUserId);
                         break;
                 case '7':
                         changePassword (userList, addressBook, loggedInUserId);
@@ -598,7 +681,6 @@ void runDashbord2 (vector <User> &userList, int &loggedInUserId)
                         cout << "Niepoprawny wybór." << endl;
                         break;
                 }
-
         }
 }
 
@@ -673,3 +755,4 @@ int main()
 	}
 return 0;
 }
+
