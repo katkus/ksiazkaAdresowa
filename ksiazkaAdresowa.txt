@@ -108,7 +108,7 @@ void registration (vector <User> &userList)
         {
                 if (userList[i].username == username)
                 {
-                        cout << "Użytkownik o podanym loginie istnieje. Wpisz inny login: ";
+                        cout << "Uzytkownik o podanym loginie istnieje. Wpisz inny login: ";
                         username = readData();
                         i = 0;
                 }
@@ -229,7 +229,7 @@ void saveAllContacts (vector <Contact> &addressBook, int&loggedInUserId)
                                 }
                                 else
                                 {
-                                        cout << "Nie udało się utworzyć pliku i zapisać do niego danych. " ;
+                                        cout << "Nie udalo sie utworzyc pliku i zapisac do niego danych. " ;
                                         return;
                                 }
                         }
@@ -378,7 +378,7 @@ void addNewContact (vector <Contact> &addressBook, int &lastContactId, int &logg
          }
          else
          {
-		cout << "Nie udalo się otworzyc pliku i zapisac do niego danych. " ;
+		cout << "Nie udalo sie otworzyc pliku i zapisac do niego danych. " ;
                 sleep(2);
 		return;
          }
@@ -487,14 +487,14 @@ void deleteContact (vector <Contact> &addressBook, int &lastContactId, int&logge
 					}
                 		}
 			}
-                	cout<< "Blad wprowadzanej danej. Zostaniesz cofniety do wczesnijeszego kokpitu."<<endl;
+                	cout<< "Blad wprowadzanej danej. Zostaniesz cofniety do wczesniejszego kokpitu."<<endl;
                         sleep(2);
                         return;
 
 		}
                 else
                 {
-			cout<< "Blad wprowadzanej danej. Zostaniesz cofniety do wczesnijeszego kokpitu."<<endl;
+			cout<< "Blad wprowadzanej danej. Zostaniesz cofniety do wczesniejszego kokpitu."<<endl;
 			sleep(2);
 			return;
                 }
@@ -614,7 +614,7 @@ void changePassword (vector <User> &userList, vector <Contact> &addressBook, int
                         		plik << itr-> password << '|' << endl;
                 		}
                 		plik.close();
-				cout<< "Hasło zostało zmienione" <<endl;
+				cout<< "Haslo zostalo zmienione" <<endl;
                 		sleep(2);
                 		return;
         		}
@@ -678,7 +678,7 @@ void runDashbord2 (vector <User> &userList, int &loggedInUserId)
                        return;
                         break;
                 default:
-                        cout << "Niepoprawny wybór." << endl;
+                        cout << "Niepoprawny wybor." << endl;
                         break;
                 }
         }
@@ -698,24 +698,24 @@ void logIn (vector <User> &userList)
                 {
                         for(int attempt = 0; attempt < 3; attempt++)
                         {
-                                cout << "Podaj hasło. Pozostało prób " << 3-attempt<< ": ";
+                                cout << "Podaj haslo. Pozostalo prob " << 3-attempt<< ": ";
                                 password = readData();
                                 if (userList[i].password == password)
                                 {
-                                        cout << "Zalogowałeś się." << endl;
+                                        cout << "Zalogowales sie." << endl;
 					loggedInUserId = userList[i].id;
                                         sleep(1);
 					runDashbord2 (userList, loggedInUserId);
                                         return;
                                 }
                         }
-                        cout << "Podałeś 3 razy błędne hasło. Poczekaj 3 sekundy przed kolejną próbą." << endl;
+                        cout << "Podales 3 razy bledne haslo. Poczekaj 3 sekundy przed kolejna proba." << endl;
                         sleep(3);
                         return;
                 }
                 i++;
         }
-        cout << "Nie ma użytkownika z takim loginem." << endl;
+        cout << "Nie ma uzytkownika z takim loginem." << endl;
         sleep(3);
         return;
 }
@@ -733,7 +733,7 @@ int main()
                         cout << " KSIAZKA ADRESOWA " << endl;
 			cout << "1. Rejestracja" <<endl;
                         cout << "2. Logownie "<<endl;
-                        cout << "3. Zakończ program "<<endl;
+                        cout << "3. Zakoncz program "<<endl;
 			cout << "Dokonaj wyboru wprowadzajac odpowiedni numer:";
                         choice = readSign();
 
@@ -749,10 +749,9 @@ int main()
                                 exit(0);
 				break;
 			default:
-                        	cout << "Niepoprawny wybór." << endl;
+                        	cout << "Niepoprawny wybor." << endl;
                         	break;
                         }
 	}
 return 0;
 }
-
